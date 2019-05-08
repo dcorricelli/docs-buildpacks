@@ -13,19 +13,19 @@ This topic explains how to write extension buildpacks for .NET apps.
 
 
 ## <a id='overview'></a> Overview
-Most .NET Framework apps are pushed with the [Hosted Web Core (HWC) buildpack](../hwc/index.html).  
+Most .NET Framework apps are pushed with the [Hosted Web Core (HWC) buildpack](../hwc/index.html).
 
-The HWC buildpack contains the commonly required .NET dependencies used by .NET apps. This set of 
+The HWC buildpack contains the commonly required .NET dependencies used by .NET apps. This set of
 HWC buildpack dependencies is a subset entire gamut of possible .NET dependencies and does not contain all the
-DLLs that every app could need. 
+DLLs that every app could need.
 
 An extension buildpack supplies a custom set of .NET dependencies to an app's container.
 
-You cannot add modules or extensions directly to the HWC buildpack. If the HWC buildpack 
+You cannot add modules or extensions directly to the HWC buildpack. If the HWC buildpack
 lacks dependencies your app requires, we recommend that you create
 an extension buildpack containing the missing dependencies required by your app.
 
-<p class='note'><strong>Note:</strong> The HWC buildpack 
+<p class='note'><strong>Note:</strong> The HWC buildpack
 contains a number of built-in HWC features, for example, the URL Rewrite and HTTP compression modules.
 Extensions should only provide additional functionality to your app. For more information about
 existing HWC features, see <a href="../hwc/index.html#features">Features</a> in
@@ -39,7 +39,7 @@ The
 [buildpack-packager](https://github.com/cloudfoundry/libbuildpack/tree/master/packager/buildpack-packager)
 provides boilerplate code that you can use to start writing your buildpack.
 
-1. To install the `buildpack-packager` CLI tool, run the commands below. 
+1. To install the `buildpack-packager` CLI tool, run the commands below.
 
     ```go
     go get github.com/cloudfoundry/libbuildpack/
@@ -53,7 +53,7 @@ provides boilerplate code that you can use to start writing your buildpack.
     ```
 	 Where:
     * `BUILDPACK-NAME` is the name of the buildpack you are creating.
-    * `BUILDPACK-DIRECTORY` is the directory where the boilerplate code will be written. 
+    * `BUILDPACK-DIRECTORY` is the directory where the boilerplate code will be written.
     If the directory does not exist, it is created by the `buildpack-packager init` process.
 
     For example:
@@ -69,11 +69,11 @@ provides boilerplate code that you can use to start writing your buildpack.
     ```
 
     Where: `BUILDPACK-DIRECTORY` is the directory created by the buildpack-packager command, containing the
-      boilerplate code.  
+      boilerplate code.
 
 ## <a id='create'></a> Step 2. Create an Extension Buildpack to Supply Additional DLLs to a .NET Framework App
 
-An extension buildpack provides the dependencies required by your app that are missing in HWC buildpack. 
+An extension buildpack provides the dependencies required by your app that are missing in HWC buildpack.
 The extension buildpack references and supplies needed dependencies to the app's container when you push the app.
 
 To create an extension buildpack containing additional DLLs, follow the steps below:
@@ -84,13 +84,13 @@ To create an extension buildpack containing additional DLLs, follow the steps be
 
 1. On the command line, browse to the directory containing the new ZIP file.
 
-1. To generate a SHA for your ZIP file, run the following command:  
+1. To generate a SHA for your ZIP file, run the following command:
 
     ```shell
     shasum -a256 DLL-ZIP-FILE
     ```
 
-    Where `DLL-ZIP-FILE` is the name of your DLL ZIP file. 
+    Where `DLL-ZIP-FILE` is the name of your DLL ZIP file.
 
 1. Upload the ZIP file containing your dependencies to a private web server that is accessible by
 Cloud Foundry. You can also use an S3 bucket or Azure Storage.
@@ -103,12 +103,12 @@ as follows:
 
     ```yaml
     dependencies:
-    - name: BINARY-NAME 
-      uri: http://s3.amazon.com/BUCKET-NAME/DLL-ZIP-FILE 
+    - name: BINARY-NAME
+      uri: http://s3.amazon.com/BUCKET-NAME/DLL-ZIP-FILE
       version: 0.0.1
       sha256: GENERATED-SHA-256
-      cf_stacks: 
-      - windows 
+      cf_stacks:
+      - windows2016
     ```
     Where:
     * `BINARY-NAME` is the name of your binary application.
@@ -120,17 +120,17 @@ as follows:
 
 1. To navigate to the BUILDPACK-DIRECTORY/src/BUILDPACK-NAME/ directory, use either Windows Explorer, or your text editor's 'File - Open' option.
 
-1. Edit the `supply.go` script.  
+1. Edit the `supply.go` script.
 
 1. Add dependencies to the container's `PATH` as follows:
 
     1. Add a `stager.InstallDependency` for the `dependency` and `version` you have in your
     manifest.yml file.
 
-    1. Add a `stager.AddBinDependency` for every DLL file you want your app to be able to access.  
+    1. Add a `stager.AddBinDependency` for every DLL file you want your app to be able to access.
 
     For example:
-    
+
     ```c#
     dep := libbuildpack.Dependency{Name: "my-binary", Version: "0.0.1"}
     if err := s.Installer.InstallDependency(dep, s.Stager.DepDir()); err != nil {
@@ -156,8 +156,8 @@ The following steps build a cached extension buildpack artifact.
     buildpack-packager build -cached -stack STACK-NAME
     ```
 
-    Where:  
-    * `STACK-NAME` is the pre-built operating system that can run apps.  
+    Where:
+    * `STACK-NAME` is the pre-built operating system that can run apps.
 
     <p class='note'><strong>Note:</strong> If the buildpack's <code>supply.go</code> script contains a mistake,
     <code>buildpack-packager</code> throws an error. You should not push your app with the new extension <code>buildpack</code> until after all local errors have been corrected. You must
@@ -166,18 +166,18 @@ The following steps build a cached extension buildpack artifact.
 ## <a id='finish'></a> Step 4. Validate the Extension Buildpack
 The following steps push an app with the cached extension buildpack artifact.
 
-1. Upload the buildpack to a private web server accessible to Cloud Foundry. 
-You can upload the finished buildpack to the same web server as your dependencies. 
-You can also use an S3 bucket or Azure Storage.  
+1. Upload the buildpack to a private web server accessible to Cloud Foundry.
+You can upload the finished buildpack to the same web server as your dependencies.
+You can also use an S3 bucket or Azure Storage.
 
 1. To deploy your app with the extension buildpack and determine whether the new buildpack functions as intended, run the following command:
 
     ```shell
-    cf push APP-NAME -s windows -b EXT-BUILDPACK-URL -b hwc_buildpack
+    cf push APP-NAME -s windows2016 -b EXT-BUILDPACK-URL -b hwc_buildpack
     ```
     Where:
-    * `APP-NAME` is your app's name. 
-    * `EXT-BUILDPACK-URL` is the URL of the uploaded extension buildpack zip file.  
+    * `APP-NAME` is your app's name.
+    * `EXT-BUILDPACK-URL` is the URL of the uploaded extension buildpack zip file.
 
     For example:
     <pre class='terminal'>
